@@ -1,0 +1,50 @@
+name: Deploy a AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS mediante OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Iniciar sesión en Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Construir y subir la imagen Docker a ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: descuento-volumen
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG:0:7}
+          docker buildx build --platform linux/amd64 --provenance=false \
+            --build-arg APP_VERSION=${IMAGE_TAG:0:7} -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE_URI=$IMAGE" >> $GITHUB_ENV
+
+      - name: Actualizar el código de la función en Lambda
+        run: |
+          aws lambda update-function-code --function-name descuento-docker --image-uri $IMAGE_URI
+          aws lambda wait function-updated --function-name descuento-docker
+
+      - name: Smoke Test (Prueba de verificación en vivo)
+        run: |
+          aws lambda invoke --function-name descuento-docker --cli-binary-format raw-in-base64-out --payload '{"unidades":150,"precioCentavos":2500}' r.json
+          cat r.json
+          jq -e '.porcentaje == 10' r.json
