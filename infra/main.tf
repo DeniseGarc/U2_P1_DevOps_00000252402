@@ -4,7 +4,7 @@ terraform {
   # Estado remoto compartido, con bloqueo nativo de S3.
   # Cambien <ACCOUNT_ID> y la región por las de su cuenta.
   backend "s3" {
-    bucket       = "tfstate-descuento-<ACCOUNT_ID>"
+    bucket       = "tfstate-descuento-720238108007"
     key          = "descuento/terraform.tfstate"
     region       = "us-east-2"
     use_lockfile = true
