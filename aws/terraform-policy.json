@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EstadoBucket",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::tfstate-descuento-<ACCOUNT_ID>"
+    },
+    {
+      "Sid": "EstadoObjetos",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::tfstate-descuento-<ACCOUNT_ID>/descuento/*"
+    },
+    {
+      "Sid": "FuncionesDescuento",
+      "Effect": "Allow",
+      "Action": "lambda:*",
+      "Resource": "arn:aws:lambda:*:<ACCOUNT_ID>:function:descuento-*"
+    },
+    {
+      "Sid": "RolesDescuento",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:PassRole"
+      ],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/descuento-*"
+    }
+  ]
+}
